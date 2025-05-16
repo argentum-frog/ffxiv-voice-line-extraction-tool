@@ -17,10 +17,31 @@ internal class Program
 	// @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn" for standalone Launcher
 	// or @"C:\Program Files (x86)\Steam\steamapps\common\FINAL FANTASY XIV Online" for Steam
 	const string DefaultGameDirectory = null;
-	const string DefaultOutDirectory = ".";
+	const string DefaultOutDirectory = null;
 	static readonly List<string> DefaultLanguages = ["en"];
 
-	// Arguments are: <GAME_DIRECTORY> <OUT_DIRECTORY> <LANGUAGE> [--all|--battle|--cutscene [exX[-Y]]]
+	const string HelpText =
+	"""
+	Tool for extracting voice line game files from FFXIV. Not intended for general use.
+
+	Usage: FFXIVVoiceLineExtractionTool --game-directory <GAME_DIRECTORY> --out-directory <OUT_DIRECTORY> [OPTIONS] [TARGET]
+
+	Paths can be absolute or relative. <GAME_DIRECTORY> should be the root game directory, i.e. the one containing the `game` folder
+	With [TARGET]:
+		--all
+			Extract all supported voice lines
+		--battle
+			Extract battle voice lines
+		--mahjong
+			Extract mahjong voice lines
+		--cutscene [exX[-exY]]
+			Extract cutscene voice lines.
+			By default voice lines are extracted for all expansions, the optional `[exX[-exY]]` argument allows for limiting this to a single one or range where X/Y are the number of the expansions. 2.X is represented by `ex0` or `ffxiv`
+	With optional [OPTIONS]:
+		--language <en|ja|de|fr|all>
+			Select the languages for which the voice lines should be extracted. If not provided `en` is used as the default. `all` selects the extraction of all voice lines for the supported languages. Providing the argument multiple times allows selecting a custom subset of languages
+	""";
+
 	static void Main(string[] args)
 	{
 		string? gameDirectory = DefaultGameDirectory;
@@ -88,8 +109,18 @@ internal class Program
 					}
 					break;
 				default:
-					break;
+					Console.WriteLine(HelpText);
+					return;
 			}
+		}
+		if (args.Length == 0
+			|| gameDirectory == null
+			|| outDirectory == null
+			|| !(extractBattleVoiceLines || extractMahjongVoiceLines || extractCutsceneVoiceLines)
+		)
+		{
+			Console.WriteLine(HelpText);
+			return;
 		}
 		if (languages.Count == 0)
 		{

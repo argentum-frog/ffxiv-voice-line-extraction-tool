@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace FFXIVVoiceLineExtractionTool;
 
@@ -181,7 +180,7 @@ internal class Program
 			else
 			{
 				num_unused_indices += 1;
-				if (num_unused_indices >= 100) break;
+				if (num_unused_indices >= 1000) break;
 				// heuristic
 			}
 		}
@@ -223,7 +222,7 @@ internal class Program
 			else
 			{
 				num_unused_indices += 1;
-				if (num_unused_indices >= 100) break;
+				if (num_unused_indices >= 1000) break;
 				// heuristic
 			}
 		}

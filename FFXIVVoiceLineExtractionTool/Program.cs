@@ -126,19 +126,19 @@ internal class Program
 			{
 				Console.WriteLine("Extracting battle voice lines...");
 				ExtractBattleVoiceLines(lumina, extractionConfiguration);
-				Console.WriteLine("Finished extracting battle voice lines");
+				Console.WriteLine("\nFinished extracting battle voice lines");
 			}
 			if (extractMahjongVoiceLines)
 			{
 				Console.WriteLine("Extracting mahjong voice lines...");
 				ExtractMahjongVoiceLines(lumina, extractionConfiguration);
-				Console.WriteLine("Finished extracting mahjong voice lines");
+				Console.WriteLine("\nFinished extracting mahjong voice lines");
 			}
 			if (extractCutsceneVoiceLines)
 			{
 				Console.WriteLine("Extracting cutscene voice lines...");
 				ExtractCutsceneVoiceLines(lumina, extractionConfiguration);
-				Console.WriteLine("Finished extracting cutscene voice lines");
+				Console.WriteLine("\nFinished extracting cutscene voice lines");
 			}
 		}
 	}
@@ -162,20 +162,35 @@ internal class Program
 		uint num_unused_indices = 0;
 		for (uint i = BattleVoiceLineStartIndex; i < MahjongVoiceLineStartIndex; i++)
 		{
-			string fileName = i + "_ja.scd"; // use JP language file as test
-			if (gameData.FileExists(VoLineGameDirectory + fileName))
+			bool fileExistsForAtLeastOneSelectedLanguage = false;
+			foreach (string language in extractionConfiguration.Languages)
 			{
-				num_unused_indices = 0;
-				foreach (string language in extractionConfiguration.Languages)
+				string fileName = i + $"_{language}.scd";
+				Lumina.Data.FileResource? file = null;
+				try
 				{
-					fileName = i + $"_{language}.scd";
-					Lumina.Data.FileResource file = gameData.GetFile(VoLineGameDirectory + fileName)!;
-					file!.SaveFile(outDirectory + fileName);
-
+					file = gameData.GetFile(VoLineGameDirectory + fileName);
+				}
+				catch (System.IO.FileNotFoundException fileNotFoundException)
+				{
 					logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
-						fileName + ", " + file!.GetFileHash() + "\n"
+						fileName + ", ERROR: " + fileNotFoundException.Message + "\n"
 					));
 				}
+				if (file != null)
+				{
+					Console.Write("\r" + VoLineGameDirectory + fileName);
+					fileExistsForAtLeastOneSelectedLanguage = true;
+					file.SaveFile(outDirectory + fileName);
+
+					logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
+						fileName + ", " + file.GetFileHash() + "\n"
+					));
+				}
+			}
+			if (fileExistsForAtLeastOneSelectedLanguage)
+			{
+				num_unused_indices = 0;
 			}
 			else
 			{
@@ -186,6 +201,7 @@ internal class Program
 		}
 	}
 
+	// TODO refactor so this is not just mostly copy-paste
 	const uint MahjongVoiceLineStartIndex = 8291000;
 	static void ExtractMahjongVoiceLines(Lumina.GameData gameData, ExtractionConfiguration extractionConfiguration)
 	{
@@ -204,20 +220,35 @@ internal class Program
 		uint num_unused_indices = 0;
 		for (uint i = MahjongVoiceLineStartIndex; i < MahjongVoiceLineStartIndex + 10000u; i++)
 		{
-			string fileName = i + "_ja.scd"; // use JP language file as test
-			if (gameData.FileExists(VoLineGameDirectory + fileName))
+			bool fileExistsForAtLeastOneSelectedLanguage = false;
+			foreach (string language in extractionConfiguration.Languages)
 			{
-				num_unused_indices = 0;
-				foreach (string language in extractionConfiguration.Languages)
+				string fileName = i + $"_{language}.scd";
+				Lumina.Data.FileResource? file = null;
+				try
 				{
-					fileName = i + $"_{language}.scd";
-					Lumina.Data.FileResource file = gameData.GetFile(VoLineGameDirectory + fileName)!;
-					file!.SaveFile(outDirectory + fileName);
-
+					file = gameData.GetFile(VoLineGameDirectory + fileName);
+				}
+				catch (System.IO.FileNotFoundException fileNotFoundException)
+				{
 					logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
-						fileName + ", " + file!.GetFileHash() + "\n"
+						fileName + ", ERROR: " + fileNotFoundException.Message + "\n"
 					));
 				}
+				if (file != null)
+				{
+					Console.Write("\r" + VoLineGameDirectory + fileName);
+					fileExistsForAtLeastOneSelectedLanguage = true;
+					file.SaveFile(outDirectory + fileName);
+
+					logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
+						fileName + ", " + file.GetFileHash() + "\n"
+					));
+				}
+			}
+			if (fileExistsForAtLeastOneSelectedLanguage)
+			{
+				num_unused_indices = 0;
 			}
 			else
 			{
@@ -262,40 +293,54 @@ internal class Program
 					uint num_unused_indices = 0;
 					for (uint i = 0; i < 100000u; i++)
 					{
-						string fileName = (ex == 0 && patch_suffix < 10) ?
-							$"vo_manfst{patch_suffix:D1}00_{bankChar}{i:D5}_m_ja.scd" // 2.0 jank
-							: $"vo_voiceman_{ex + 2:D2}{patch_suffix:D3}_{bankChar}{i:D5}_m_ja.scd"; // use JP language file as test
-						if (gameData.FileExists(cutsceneVoLineGameDirectory + fileName))
+						bool fileExistsForAtLeastOneSelectedLanguage = false;
+						foreach (string language in extractionConfiguration.Languages)
 						{
-							num_in_ex += 1;
-							num_in_patch_suffix += 1;
-							num_in_bank += 1;
-							num_unused_indices = 0;
-							if (patch_suffix != last_patch_suffix)
+							string fileName = (ex == 0 && patch_suffix < 10) ?
+								$"vo_manfst{patch_suffix:D1}00_{bankChar}{i:D5}_m_{language}.scd" // 2.0 jank
+								: $"vo_voiceman_{ex + 2:D2}{patch_suffix:D3}_{bankChar}{i:D5}_m_{language}.scd";
+							Lumina.Data.FileResource? file = null;
+							try
 							{
-								System.IO.Directory.CreateDirectory(outDirectory + cutsceneVoLineGameDirectory);
-								logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
-									cutsceneVoLineGameDirectory + ", " + "sha256\n"
-									));
-								last_patch_suffix = patch_suffix;
+								file = gameData.GetFile(cutsceneVoLineGameDirectory + fileName);
 							}
-							foreach (string language in extractionConfiguration.Languages)
+							catch (System.IO.FileNotFoundException fileNotFoundException)
 							{
-								fileName = (ex == 0 && patch_suffix < 10) ?
-									$"vo_manfst{patch_suffix:D1}00_{bankChar}{i:D5}_m_{language}.scd" // 2.0 jank
-									: $"vo_voiceman_{ex + 2:D2}{patch_suffix:D3}_{bankChar}{i:D5}_m_{language}.scd";
-								Lumina.Data.FileResource file = gameData.GetFile(cutsceneVoLineGameDirectory + fileName)!;
-								file!.SaveFile(outDirectory + fileName);
+								logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
+									fileName + ", ERROR: " + fileNotFoundException.Message + "\n"
+								));
+							}
+							if (file != null)
+							{
+								if (patch_suffix != last_patch_suffix)
+								{
+									System.IO.Directory.CreateDirectory(outDirectory + cutsceneVoLineGameDirectory);
+									logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
+										cutsceneVoLineGameDirectory + ", " + "sha256\n"
+										));
+									last_patch_suffix = patch_suffix;
+								}
+								Console.Write("\r" + cutsceneVoLineGameDirectory + fileName);
+								fileExistsForAtLeastOneSelectedLanguage = true;
+								file!.SaveFile(outDirectory + cutsceneVoLineGameDirectory + fileName);
 
 								logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
 									fileName + ", " + file!.GetFileHash() + "\n"
 								));
 							}
+
+						}
+						if (fileExistsForAtLeastOneSelectedLanguage)
+						{
+							num_in_ex += 1;
+							num_in_patch_suffix += 1;
+							num_in_bank += 1;
+							num_unused_indices = 0;
 						}
 						else
 						{
 							num_unused_indices += 1;
-							if (num_unused_indices >= 10) break;
+							if (num_unused_indices >= 20) break;
 							// heuristic
 						}
 					}

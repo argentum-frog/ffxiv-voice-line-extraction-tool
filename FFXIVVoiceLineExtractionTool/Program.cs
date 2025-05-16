@@ -32,7 +32,7 @@ internal class Program
 		bool extractCutsceneVoiceLines = false;
 		uint expansionRangeStart = uint.MaxValue;
 		uint expansionRangeEnd = uint.MaxValue;
-		for (UInt32 i = 0; i < args.Length; i++)
+		for (uint i = 0; i < args.Length; i++)
 		{
 			string arg = args[i];
 			switch (arg)
@@ -113,15 +113,21 @@ internal class Program
 			};
 			if (extractBattleVoiceLines)
 			{
+				Console.WriteLine("Extracting battle voice lines...");
 				ExtractBattleVoiceLines(lumina, extractionConfiguration);
+				Console.WriteLine("Finished extracting battle voice lines");
 			}
 			if (extractMahjongVoiceLines)
 			{
+				Console.WriteLine("Extracting mahjong voice lines...");
 				ExtractMahjongVoiceLines(lumina, extractionConfiguration);
+				Console.WriteLine("Finished extracting mahjong voice lines");
 			}
 			if (extractCutsceneVoiceLines)
 			{
+				Console.WriteLine("Extracting cutscene voice lines...");
 				ExtractCutsceneVoiceLines(lumina, extractionConfiguration);
+				Console.WriteLine("Finished extracting cutscene voice lines");
 			}
 		}
 	}
@@ -145,7 +151,7 @@ internal class Program
 		uint num_unused_indices = 0;
 		for (uint i = BattleVoiceLineStartIndex; i < MahjongVoiceLineStartIndex; i++)
 		{
-			string fileName = i + "_ja.scd"; // use JP language file as "canary"
+			string fileName = i + "_ja.scd"; // use JP language file as test
 			if (gameData.FileExists(VoLineGameDirectory + fileName))
 			{
 				num_unused_indices = 0;
@@ -153,7 +159,7 @@ internal class Program
 				{
 					fileName = i + $"_{language}.scd";
 					Lumina.Data.FileResource file = gameData.GetFile(VoLineGameDirectory + fileName)!;
-					file!.SaveFile(outDirectory + fileName); // TODO test what the difference is to SaveFileRaw
+					file!.SaveFile(outDirectory + fileName);
 
 					logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
 						fileName + ", " + file!.GetFileHash() + "\n"
@@ -163,7 +169,8 @@ internal class Program
 			else
 			{
 				num_unused_indices += 1;
-				if (num_unused_indices >= 100) break; // heuristic
+				if (num_unused_indices >= 100) break;
+				// heuristic
 			}
 		}
 	}
@@ -186,7 +193,7 @@ internal class Program
 		uint num_unused_indices = 0;
 		for (uint i = MahjongVoiceLineStartIndex; i < MahjongVoiceLineStartIndex + 10000u; i++)
 		{
-			string fileName = i + "_ja.scd"; // use JP language file as "canary"
+			string fileName = i + "_ja.scd"; // use JP language file as test
 			if (gameData.FileExists(VoLineGameDirectory + fileName))
 			{
 				num_unused_indices = 0;
@@ -194,7 +201,7 @@ internal class Program
 				{
 					fileName = i + $"_{language}.scd";
 					Lumina.Data.FileResource file = gameData.GetFile(VoLineGameDirectory + fileName)!;
-					file!.SaveFile(outDirectory + fileName); // TODO test what the difference is to SaveFileRaw
+					file!.SaveFile(outDirectory + fileName);
 
 					logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
 						fileName + ", " + file!.GetFileHash() + "\n"
@@ -204,7 +211,8 @@ internal class Program
 			else
 			{
 				num_unused_indices += 1;
-				if (num_unused_indices >= 100) break; // heuristic
+				if (num_unused_indices >= 100) break;
+				// heuristic
 			}
 		}
 	}
@@ -245,7 +253,7 @@ internal class Program
 					{
 						string fileName = (ex == 0 && patch_suffix < 10) ?
 							$"vo_manfst{patch_suffix:D1}00_{bankChar}{i:D5}_m_ja.scd" // 2.0 jank
-							: $"vo_voiceman_{ex + 2:D2}{patch_suffix:D3}_{bankChar}{i:D5}_m_ja.scd"; // use JP language file as "canary"
+							: $"vo_voiceman_{ex + 2:D2}{patch_suffix:D3}_{bankChar}{i:D5}_m_ja.scd"; // use JP language file as test
 						if (gameData.FileExists(cutsceneVoLineGameDirectory + fileName))
 						{
 							num_in_ex += 1;
@@ -266,7 +274,7 @@ internal class Program
 									$"vo_manfst{patch_suffix:D1}00_{bankChar}{i:D5}_m_{language}.scd" // 2.0 jank
 									: $"vo_voiceman_{ex + 2:D2}{patch_suffix:D3}_{bankChar}{i:D5}_m_{language}.scd";
 								Lumina.Data.FileResource file = gameData.GetFile(cutsceneVoLineGameDirectory + fileName)!;
-								file!.SaveFile(outDirectory + fileName); // TODO test what the difference is to SaveFileRaw
+								file!.SaveFile(outDirectory + fileName);
 
 								logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
 									fileName + ", " + file!.GetFileHash() + "\n"
@@ -276,23 +284,25 @@ internal class Program
 						else
 						{
 							num_unused_indices += 1;
-							if (num_unused_indices >= 10) break; // heuristic
+							if (num_unused_indices >= 10) break;
+							// heuristic
 						}
 					}
 
 					if (num_in_bank == 0) num_empty_banks += 1;
 					else num_empty_banks = 0;
-					if (num_empty_banks >= (ex == 0 ? 8u : 1u)) break; // heuristic
-																	   // cut/ffxiv/sound/voicem/voiceman_02401 starts with bank 3 for some reason and others for 2.X contain jumps as well
+					if (num_empty_banks >= (ex == 0 ? 8u : 1u)) break;
+					// heuristic
+					// cut/ffxiv/sound/voicem/voiceman_02401 starts with bank 3 for some reason and others for 2.X contain jumps as well
 				}
 
 				if (num_in_patch_suffix == 0) num_empty_patch_suffixes += 1;
 				else num_empty_patch_suffixes = 0;
-				if (num_empty_patch_suffixes >= (ex == 0 ? 200u : 100u)) break; // heuristic
+				if (num_empty_patch_suffixes >= (ex == 0 ? 200u : 100u)) break;
+				// heuristic
 			}
 
 			if (num_in_ex == 0) break;
 		}
-
 	}
 }

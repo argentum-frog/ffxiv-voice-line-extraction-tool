@@ -20,8 +20,7 @@ internal class Program
 	const string DefaultOutDirectory = ".";
 	static readonly List<string> DefaultLanguages = ["en"];
 
-	// Assumes arguments are: <GAME_DIRECTORY> <OUT_DIRECTORY> <LANGUAGE> [--all --battle --cutscene [exX[-Y]]]
-	// with optional
+	// Arguments are: <GAME_DIRECTORY> <OUT_DIRECTORY> <LANGUAGE> [--all|--battle|--cutscene [exX[-Y]]]
 	static void Main(string[] args)
 	{
 		string? gameDirectory = DefaultGameDirectory;
@@ -56,7 +55,9 @@ internal class Program
 					break;
 				case "--all":
 					extractBattleVoiceLines = true;
+					extractMahjongVoiceLines = true;
 					extractCutsceneVoiceLines = true;
+					expansionRangeStart = 0;
 					break;
 				case "--battle":
 					extractBattleVoiceLines = true;
@@ -107,7 +108,7 @@ internal class Program
 		{
 			ExtractionConfiguration extractionConfiguration = new()
 			{
-				OutDirectory = outDirectory,
+				OutDirectory = outDirectory.Replace('\\', '/'),
 				Languages = languages,
 				ExpansionRange = new(expansionRangeStart, expansionRangeEnd)
 			};

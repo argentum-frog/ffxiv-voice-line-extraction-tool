@@ -69,7 +69,7 @@ internal class Program
 					extractCutsceneVoiceLines = true;
 					if ((i + 1) < args.Length && args[i + 1].Contains("ex"))
 					{
-						string exSelectionArg = args[++i].Replace("ex", "");
+						string exSelectionArg = args[++i].Replace("ffxiv", "ex0").Replace("ex", "");
 						if (exSelectionArg.Contains('-'))
 						{
 							string[] exSelectionRange = exSelectionArg.Split('-');
@@ -143,7 +143,7 @@ internal class Program
 		}
 	}
 
-	const uint BattleVoiceLineStartIndex = 8201000;
+	const uint BattleVoiceLineStartIndex = 8201000u;
 	// Mahjong voice lines start at 8291000, which seems to imply that the third most significant digit is a "bank" index
 	static void ExtractBattleVoiceLines(Lumina.GameData gameData, ExtractionConfiguration extractionConfiguration)
 	{
@@ -195,14 +195,14 @@ internal class Program
 			else
 			{
 				num_unused_indices += 1;
-				if (num_unused_indices >= 1000) break;
+				if (num_unused_indices >= 1000u) break;
 				// heuristic
 			}
 		}
 	}
 
 	// TODO refactor so this is not just mostly copy-paste
-	const uint MahjongVoiceLineStartIndex = 8291000;
+	const uint MahjongVoiceLineStartIndex = 8291000u;
 	static void ExtractMahjongVoiceLines(Lumina.GameData gameData, ExtractionConfiguration extractionConfiguration)
 	{
 		const string VoLineGameDirectory = "sound/voice/vo_line/";
@@ -253,12 +253,21 @@ internal class Program
 			else
 			{
 				num_unused_indices += 1;
-				if (num_unused_indices >= 1000) break;
+				if (num_unused_indices >= 1000u) break;
 				// heuristic
 			}
 		}
 	}
 
+	static readonly uint[] ARRBasePatchSuffixNumbers = [
+		0, 5, 7, 9, 50,
+		200, 206, 207,
+		300, 304, 306, 309, 313,
+		401, 404, 405, 407, 408,
+		503,
+		600,
+	];
+	// 2.0 voice lines are stored completely separately and use a different folder numbering scheme
 	static void ExtractCutsceneVoiceLines(Lumina.GameData gameData, ExtractionConfiguration extractionConfiguration)
 	{
 		string outDirectory = extractionConfiguration.OutDirectory;
@@ -278,10 +287,10 @@ internal class Program
 			for (uint patch_suffix = 0; patch_suffix < 1000u; patch_suffix++)
 			{
 				uint num_in_patch_suffix = 0;
-				string cutsceneVoLineGameDirectory = (ex == 0 && patch_suffix < 10) ?
-					$"cut/ffxiv/sound/manfst/manfst{patch_suffix:D1}00/" // 2.0 jank
+				string cutsceneVoLineGameDirectory = (ex == 0 && patch_suffix < ARRBasePatchSuffixNumbers.Length) ?
+					$"cut/ffxiv/sound/manfst/manfst{ARRBasePatchSuffixNumbers[patch_suffix]:D3}/" // 2.0 jank
 					: $"cut/ex{ex}/sound/voicem/voiceman_{ex + 2:D2}{patch_suffix:D3}/".Replace("ex0", "ffxiv");
-				// Note that 2.1 doesn't seem to have any voiced cutscenes so only `patch_suffix` >= 200 is actually used for 2.X
+				// Note that 2.1 doesn't seem to have any voiced cutscenes so only `patch_suffix` >= 200 is actually used for 2.2+
 
 				uint num_empty_banks = 0;
 				for (uint bank = 0; bank < (26 + 10); bank++)
@@ -296,8 +305,8 @@ internal class Program
 						bool fileExistsForAtLeastOneSelectedLanguage = false;
 						foreach (string language in extractionConfiguration.Languages)
 						{
-							string fileName = (ex == 0 && patch_suffix < 10) ?
-								$"vo_manfst{patch_suffix:D1}00_{bankChar}{i:D5}_m_{language}.scd" // 2.0 jank
+							string fileName = (ex == 0 && patch_suffix < ARRBasePatchSuffixNumbers.Length) ?
+								$"vo_manfst{ARRBasePatchSuffixNumbers[patch_suffix]:D3}_{bankChar}{i:D5}_m_{language}.scd" // 2.0 jank
 								: $"vo_voiceman_{ex + 2:D2}{patch_suffix:D3}_{bankChar}{i:D5}_m_{language}.scd";
 							Lumina.Data.FileResource? file = null;
 							try
@@ -340,7 +349,7 @@ internal class Program
 						else
 						{
 							num_unused_indices += 1;
-							if (num_unused_indices >= 20) break;
+							if (num_unused_indices >= 1000u) break;
 							// heuristic
 						}
 					}
@@ -354,7 +363,7 @@ internal class Program
 
 				if (num_in_patch_suffix == 0) num_empty_patch_suffixes += 1;
 				else num_empty_patch_suffixes = 0;
-				if (num_empty_patch_suffixes >= (ex == 0 ? 200u : 100u)) break;
+				if (num_empty_patch_suffixes >= (ex == 0 ? 1000u : 100u)) break;
 				// heuristic
 			}
 

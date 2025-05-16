@@ -46,7 +46,7 @@ internal class Program
 					string lang_arg = args[++i];
 					if (lang_arg.Equals("all"))
 					{
-						languages = ["en", "jp", "fr", "de"];
+						languages = ["en", "ja", "fr", "de"];
 					}
 					else
 					{

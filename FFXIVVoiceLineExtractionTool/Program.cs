@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace FFXIVVoiceLineExtractionTool;
 
@@ -97,8 +98,18 @@ internal class Program
 		}
 		languages.Sort();
 
+		gameDirectory = gameDirectory.Replace('\\', '/');
+		if (!gameDirectory.EndsWith('/'))
+		{
+			gameDirectory += "/";
+		}
+		outDirectory = outDirectory.Replace('\\', '/');
+		if (!outDirectory.EndsWith('/'))
+		{
+			outDirectory += "/";
+		}
 
-		Lumina.GameData? lumina = new(gameDirectory.Replace('\\', '/') + "/game/sqpack");
+		Lumina.GameData? lumina = new(gameDirectory + "game/sqpack");
 
 		if (lumina == null)
 		{
@@ -108,7 +119,7 @@ internal class Program
 		{
 			ExtractionConfiguration extractionConfiguration = new()
 			{
-				OutDirectory = outDirectory.Replace('\\', '/'),
+				OutDirectory = outDirectory,
 				Languages = languages,
 				ExpansionRange = new(expansionRangeStart, expansionRangeEnd)
 			};
@@ -141,7 +152,7 @@ internal class Program
 		string outDirectory = extractionConfiguration.OutDirectory + VoLineGameDirectory;
 		System.IO.Directory.CreateDirectory(outDirectory);
 
-		using var logFileStream = System.IO.File.Create(outDirectory
+		using var logFileStream = System.IO.File.Create(extractionConfiguration.OutDirectory
 			+ DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture).Replace(":", "-")
 			+ "_battle.log"
 		);
@@ -183,7 +194,7 @@ internal class Program
 		string outDirectory = extractionConfiguration.OutDirectory + VoLineGameDirectory;
 		System.IO.Directory.CreateDirectory(outDirectory);
 
-		using var logFileStream = System.IO.File.Create(outDirectory
+		using var logFileStream = System.IO.File.Create(extractionConfiguration.OutDirectory
 			+ DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture).Replace(":", "-")
 			+ "_mahjong.log"
 		);
@@ -240,7 +251,7 @@ internal class Program
 				string cutsceneVoLineGameDirectory = (ex == 0 && patch_suffix < 10) ?
 					$"cut/ffxiv/sound/manfst/manfst{patch_suffix:D1}00/" // 2.0 jank
 					: $"cut/ex{ex}/sound/voicem/voiceman_{ex + 2:D2}{patch_suffix:D3}/".Replace("ex0", "ffxiv");
-				// Note that 2.1 doesn't seem to have any voiced cutscenes so only `patch_suffix` >= 200 is actually used
+				// Note that 2.1 doesn't seem to have any voiced cutscenes so only `patch_suffix` >= 200 is actually used for 2.X
 
 				uint num_empty_banks = 0;
 				for (uint bank = 0; bank < (26 + 10); bank++)

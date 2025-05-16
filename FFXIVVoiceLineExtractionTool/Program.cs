@@ -28,6 +28,7 @@ internal class Program
 		string? outDirectory = DefaultOutDirectory;
 		List<string> languages = [];
 		bool extractBattleVoiceLines = false;
+		bool extractMahjongVoiceLines = false;
 		bool extractCutsceneVoiceLines = false;
 		uint expansionRangeStart = uint.MaxValue;
 		uint expansionRangeEnd = uint.MaxValue;
@@ -59,6 +60,9 @@ internal class Program
 					break;
 				case "--battle":
 					extractBattleVoiceLines = true;
+					break;
+				case "--mahjong":
+					extractMahjongVoiceLines = true;
 					break;
 				case "--cutscene":
 					extractCutsceneVoiceLines = true;
@@ -111,6 +115,10 @@ internal class Program
 			{
 				ExtractBattleVoiceLines(lumina, extractionConfiguration);
 			}
+			if (extractMahjongVoiceLines)
+			{
+				ExtractMahjongVoiceLines(lumina, extractionConfiguration);
+			}
 			if (extractCutsceneVoiceLines)
 			{
 				ExtractCutsceneVoiceLines(lumina, extractionConfiguration);
@@ -118,13 +126,14 @@ internal class Program
 		}
 	}
 
+	const uint BattleVoiceLineStartIndex = 8201000;
+	// Mahjong voice lines start at 8291000, which seems to imply that the third most significant digit is a "bank" index
 	static void ExtractBattleVoiceLines(Lumina.GameData gameData, ExtractionConfiguration extractionConfiguration)
 	{
 		const string VoLineGameDirectory = "sound/voice/vo_line/";
 		string outDirectory = extractionConfiguration.OutDirectory + VoLineGameDirectory;
 		System.IO.Directory.CreateDirectory(outDirectory);
 
-		const ulong start = 8201000;
 		using var logFileStream = System.IO.File.Create(outDirectory
 			+ DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture).Replace(":", "-")
 			+ "_battle.log"
@@ -132,11 +141,14 @@ internal class Program
 		logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
 			VoLineGameDirectory + ", " + "sha256\n"
 			));
-		for (ulong i = start; i < start + (1u << 16); i++) // TODO change this to break at long streaks of nothing
+
+		uint num_unused_indices = 0;
+		for (uint i = BattleVoiceLineStartIndex; i < MahjongVoiceLineStartIndex; i++)
 		{
 			string fileName = i + "_ja.scd"; // use JP language file as "canary"
 			if (gameData.FileExists(VoLineGameDirectory + fileName))
 			{
+				num_unused_indices = 0;
 				foreach (string language in extractionConfiguration.Languages)
 				{
 					fileName = i + $"_{language}.scd";
@@ -147,6 +159,52 @@ internal class Program
 						fileName + ", " + file!.GetFileHash() + "\n"
 					));
 				}
+			}
+			else
+			{
+				num_unused_indices += 1;
+				if (num_unused_indices >= 100) break; // heuristic
+			}
+		}
+	}
+
+	const uint MahjongVoiceLineStartIndex = 8291000;
+	static void ExtractMahjongVoiceLines(Lumina.GameData gameData, ExtractionConfiguration extractionConfiguration)
+	{
+		const string VoLineGameDirectory = "sound/voice/vo_line/";
+		string outDirectory = extractionConfiguration.OutDirectory + VoLineGameDirectory;
+		System.IO.Directory.CreateDirectory(outDirectory);
+
+		using var logFileStream = System.IO.File.Create(outDirectory
+			+ DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture).Replace(":", "-")
+			+ "_mahjong.log"
+		);
+		logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
+			VoLineGameDirectory + ", " + "sha256\n"
+			));
+
+		uint num_unused_indices = 0;
+		for (uint i = MahjongVoiceLineStartIndex; i < MahjongVoiceLineStartIndex + 10000u; i++)
+		{
+			string fileName = i + "_ja.scd"; // use JP language file as "canary"
+			if (gameData.FileExists(VoLineGameDirectory + fileName))
+			{
+				num_unused_indices = 0;
+				foreach (string language in extractionConfiguration.Languages)
+				{
+					fileName = i + $"_{language}.scd";
+					Lumina.Data.FileResource file = gameData.GetFile(VoLineGameDirectory + fileName)!;
+					file!.SaveFile(outDirectory + fileName); // TODO test what the difference is to SaveFileRaw
+
+					logFileStream.Write(System.Text.Encoding.UTF8.GetBytes(
+						fileName + ", " + file!.GetFileHash() + "\n"
+					));
+				}
+			}
+			else
+			{
+				num_unused_indices += 1;
+				if (num_unused_indices >= 100) break; // heuristic
 			}
 		}
 	}
